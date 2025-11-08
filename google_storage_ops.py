@@ -8,6 +8,7 @@ class GoogleCloudStorage:
         self.prefix = prefix
         self.client = client
         self.csv_file = csv_file
+        self._cached_df = None
 
     def auth(self):
         """Performs the authentication process with GCS and returns the HTTPIterator."""
@@ -18,13 +19,24 @@ class GoogleCloudStorage:
         except Exception as e:
             raise RuntimeError(f"Failed to authenticate or access bucket: {e}")
 
-    def collect_blobs(self):
+    def collect_blobs(self, force_refresh=False):
         """Collects all the objects from the specified bucket and prefix into two
          different lists for the name and the size. At the end it saves the information
-         to a .csv file for further analysis."""
+         to a .csv file for further analysis
+
+         Args:
+             force_refresh: If True, ignores cache and fetches fresh data from GCS
+         """
+        # Return cached data if available and not forcing refresh
+        if self._cached_df is not None and not force_refresh:
+            print("Using cached data...")
+            return self._cached_df
+
+        print("Fetching data from GCS...")
         main_obj = self.auth()
         blob_names = []
         blob_sizes = []
+
         for blob in main_obj:
             if blob.size != 0:
                 blob_names.append(blob.name)
@@ -33,9 +45,13 @@ class GoogleCloudStorage:
         recorded = {
             "blob_name": blob_names,
             "blob_size": blob_sizes
-            }
+        }
         df = pd.DataFrame(recorded)
         df.to_csv(self.csv_file, index=False)
+
+        # Cache the result
+        self._cached_df = df
+        print(f"Collected {len(blob_names)} blobs and cached the data")
         return df
 
     def collect_prefix(self):
@@ -63,3 +79,12 @@ class GoogleCloudStorage:
             }
         new_df = pd.DataFrame(formatted)
         new_df.to_csv("finalised_prefix.csv", index=False)
+
+    def clear_cache(self):
+        """Clears the cached data"""
+        self._cached_df = None
+        print("Cache cleared")
+
+    def is_cached(self):
+        """Returns True if data is cached"""
+        return self._cached_df is not None
