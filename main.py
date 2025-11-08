@@ -24,7 +24,6 @@ def format_bytes(size_bytes):
 
 operation = GoogleCloudStorage('bucket_name', "prefix", get_client())
 operation.collect_blobs("collected_blobs.csv")
-list_root_prefix = operation.get_root_prefix()
 
 df = pd.read_csv("collected_blobs.csv")
 

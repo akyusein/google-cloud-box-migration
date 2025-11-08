@@ -31,12 +31,3 @@ class GoogleCloudStorage:
         }
         df = pd.DataFrame(recorded)
         df.to_csv(csv_file, index=False)
-
-    def get_root_prefix(self):
-        """Iterates through the objects, using the split function to convert the strings
-        into a list and selecting the second index to get the root prefixes.
-        Saves the information in a set to remove duplicate entries, which
-        is converted at the end into a list"""
-        main_obj = self.auth()
-        blob_list = {blob.name.split("/")[1] for blob in main_obj if blob.size != 0}
-        return list(blob_list)
