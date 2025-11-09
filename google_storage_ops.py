@@ -1,16 +1,16 @@
 import pandas as pd
-from utils import format_bytes
+from utils import format_bytes, get_client
 
 class GoogleCloudStorage:
     """Constructor method for the class."""
-    def __init__(self, bucket_name, prefix, client, csv_file):
+    def __init__(self, bucket_name, prefix, csv_file):
         self.bucket_name = bucket_name
         self.prefix = prefix
-        self.client = client
+        self.client = get_client()
         self.csv_file = csv_file
         self._cached_df = None
 
-    def auth(self):
+    def get_iterator(self):
         """Performs the authentication process with GCS and returns the HTTPIterator."""
         try:
             bucket = self.client.get_bucket(self.bucket_name)
@@ -33,7 +33,7 @@ class GoogleCloudStorage:
             return self._cached_df
 
         print("Fetching data from GCS...")
-        main_obj = self.auth()
+        main_obj = self.get_iterator()
         blob_names = []
         blob_sizes = []
 
