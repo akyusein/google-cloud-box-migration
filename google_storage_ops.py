@@ -22,12 +22,9 @@ class GoogleCloudStorage:
     def collect_blobs(self, force_refresh=False):
         """Collects all the objects from the specified bucket and prefix into two
          different lists for the name and the size. At the end it saves the information
-         to a .csv file for further analysis
+         to a .csv file for further analysis"""
 
-         Args:
-             force_refresh: If True, ignores cache and fetches fresh data from GCS
-         """
-        # Return cached data if available and not forcing refresh
+        # Return cached data if available
         if self._cached_df is not None and not force_refresh:
             print("Using cached data...")
             return self._cached_df
@@ -79,6 +76,9 @@ class GoogleCloudStorage:
             }
         new_df = pd.DataFrame(formatted)
         new_df.to_csv("finalised_prefix.csv", index=False)
+
+        if self.is_cached():
+            self.clear_cache()
 
     def clear_cache(self):
         """Clears the cached data"""
