@@ -2,7 +2,7 @@ from google_storage_ops import GoogleCloudStorage
 
 try:
     #Initializes the Google Cloud Storage object
-    operation = GoogleCloudStorage("bucket", "B:", "collected_blobs.csv")
+    operation = GoogleCloudStorage("bucket", "prefix", "collected_blobs.csv")
 
     #Collects the blobs by performing API calls and storing the data in a cache.
     operation.collect_blobs()
