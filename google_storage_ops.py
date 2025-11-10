@@ -20,7 +20,7 @@ class GoogleCloudStorage:
             raise RuntimeError(f"Failed to authenticate or access bucket: {e}")
 
     def collect_blobs(self, force_refresh=False):
-        """Collects all the objects from the specified bucket and prefix into two
+        """Collects all the objects from the specified bucket and prefix into five
          different lists for the name and the size. At the end it saves the information
          to a .csv file for further analysis"""
 
@@ -34,20 +34,23 @@ class GoogleCloudStorage:
         blob_names = []
         blob_sizes = []
         blob_md5_hash = []
-        blob_storage_class = []
+        blobs_storage_class = []
+        blob_time_created = []
 
         for blob in main_obj:
             if blob.size != 0:
                 blob_names.append(blob.name)
                 blob_sizes.append(blob.size)
                 blob_md5_hash.append(blob.md5_hash)
-                blob_storage_class.append(blob.storage_class)
+                blobs_storage_class.append(blob.storage_class)
+                blob_time_created.append(blob.time_created)
 
         recorded = {
             "blob_name": blob_names,
             "blob_size": blob_sizes,
             "md5_hash": blob_md5_hash,
-            "storage_class": blob_storage_class
+            "storage_class": blobs_storage_class,
+            "time_created": blob_time_created
         }
 
         df = pd.DataFrame(recorded)
@@ -68,15 +71,6 @@ class GoogleCloudStorage:
         root_prefix_sizes.columns = ['root_prefix', 'total_size_bytes']
         root_prefix_sizes.to_csv("top_level.csv", index=False)
         return root_prefix_sizes
-
-    def obtain_blobs_for_db(self):
-        """The method is optional, used to capture the iterator
-        and return the blob parameters for insertion in a NoSQL database."""
-        main_obj = self.get_iterator()
-        db_entries = [{"blob_name":blob.name, "blob_size":blob.size,
-                       "md5_hash": blob.md5_hash,
-                       "storage_class": blob.storage_class} for blob in main_obj if blob.size != 0]
-        return db_entries
 
     def format_prefix(self):
         """Converts the raw bytes in the dataframe into a human-readable format."""
