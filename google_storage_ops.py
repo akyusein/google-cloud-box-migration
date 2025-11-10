@@ -1,5 +1,4 @@
 import pandas as pd
-import json
 from utils import format_bytes, get_client
 
 class GoogleCloudStorage:
@@ -70,13 +69,13 @@ class GoogleCloudStorage:
         root_prefix_sizes.to_csv("top_level.csv", index=False)
         return root_prefix_sizes
 
-    def obtain_prefix_for_db(self):
-        """The method is used to capture the DataFrame from the collect_prefix()
-        and return it for insertion in a NoSQL database."""
-        new_df = self.collect_prefix()
-        db_entries = [{"prefix": row.root_prefix, "size": row.total_size_bytes} for index, row in new_df.iterrows()]
-        with open("collected_prefixes.json", "w") as file:
-            json.dump(db_entries, file)
+    def obtain_blobs_for_db(self):
+        """The method is optional, used to capture the iterator
+        and return the blob parameters for insertion in a NoSQL database."""
+        main_obj = self.get_iterator()
+        db_entries = [{"blob_name":blob.name, "blob_size":blob.size,
+                       "md5_hash": blob.md5_hash,
+                       "storage_class": blob.storage_class} for blob in main_obj if blob.size != 0]
         return db_entries
 
     def format_prefix(self):
