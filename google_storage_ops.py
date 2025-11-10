@@ -33,16 +33,23 @@ class GoogleCloudStorage:
         main_obj = self.get_iterator()
         blob_names = []
         blob_sizes = []
+        blob_md5_hash = []
+        blob_storage_class = []
 
         for blob in main_obj:
             if blob.size != 0:
                 blob_names.append(blob.name)
                 blob_sizes.append(blob.size)
+                blob_md5_hash.append(blob.md5_hash)
+                blob_storage_class.append(blob.storage_class)
 
         recorded = {
             "blob_name": blob_names,
-            "blob_size": blob_sizes
+            "blob_size": blob_sizes,
+            "md5_hash": blob_md5_hash,
+            "storage_class": blob_storage_class
         }
+
         df = pd.DataFrame(recorded)
         df.to_csv(self.csv_file, index=False)
 
