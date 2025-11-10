@@ -1,4 +1,5 @@
 import pandas as pd
+import json
 from utils import format_bytes, get_client
 
 class GoogleCloudStorage:
@@ -61,13 +62,22 @@ class GoogleCloudStorage:
     def collect_prefix(self):
         """Groups the entries with the same top-level prefix and uses
         the sum function to add up the total size for that prefix.
-        Returns a new dataframe saved to a .csv file"""
+        Returns a new dataframe saved to a .csv file."""
         df = self.collect_blobs()
         df['root_prefix'] = df['blob_name'].str.split('/').str[1]
         root_prefix_sizes = df.groupby('root_prefix')['blob_size'].sum().reset_index()
         root_prefix_sizes.columns = ['root_prefix', 'total_size_bytes']
         root_prefix_sizes.to_csv("top_level.csv", index=False)
         return root_prefix_sizes
+
+    def obtain_prefix_for_db(self):
+        """The method is used to capture the DataFrame from the collect_prefix()
+        and return it for insertion in a NoSQL database."""
+        new_df = self.collect_prefix()
+        db_entries = [{"prefix": row.root_prefix, "size": row.total_size_bytes} for index, row in new_df.iterrows()]
+        with open("collected_prefixes.json", "w") as file:
+            json.dump(db_entries, file)
+        return db_entries
 
     def format_prefix(self):
         """Converts the raw bytes in the dataframe into a human-readable format."""
