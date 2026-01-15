@@ -2,7 +2,7 @@ from google_storage_ops import GoogleCloudStorage
 
 try:
     #Initializes the Google Cloud Storage object.
-    operation = GoogleCloudStorage("bucket", "prefix", "collected_blobs.csv")
+    operation = GoogleCloudStorage("bucket", "prefix",  "collected_blobs.csv", 2)
 
     #The method returns the sum of the root prefixes from the cached data.
     operation.format_prefix()

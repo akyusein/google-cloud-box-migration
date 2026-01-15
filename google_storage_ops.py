@@ -3,11 +3,12 @@ from utils import format_bytes, get_client
 
 class GoogleCloudStorage:
     """Constructor method for the class."""
-    def __init__(self, bucket_name, prefix, csv_file):
+    def __init__(self, bucket_name, prefix, csv_file, level):
         self.bucket_name = bucket_name
         self.prefix = prefix
         self.client = get_client()
         self.csv_file = csv_file
+        self.level = level
         self._cached_df = None
 
     def get_iterator(self):
@@ -61,20 +62,21 @@ class GoogleCloudStorage:
         print(f"Collected {len(blob_names)} blobs and cached the data")
         return df
 
-    def collect_prefix(self):
+    def collect_prefix(self, level):
         """Groups the entries with the same top-level prefix and uses
         the sum function to add up the total size for that prefix.
         Returns a new dataframe saved to a .csv file."""
         df = self.collect_blobs()
-        df['root_prefix'] = df['blob_name'].str.split('/').str[1]
+        df['root_prefix'] = df['blob_name'].str.split('/').str[level]
         root_prefix_sizes = df.groupby('root_prefix')['blob_size'].sum().reset_index()
+        root_prefix_sizes = root_prefix_sizes.sort_values(by='blob_size', ascending=False)
         root_prefix_sizes.columns = ['root_prefix', 'total_size_bytes']
         root_prefix_sizes.to_csv("top_level.csv", index=False)
         return root_prefix_sizes
 
     def format_prefix(self):
         """Converts the raw bytes in the dataframe into a human-readable format."""
-        df = self.collect_prefix()
+        df = self.collect_prefix(self.level)
         root_prefix_list = []
         total_size_list = []
         for index, row in df.iterrows():
@@ -85,7 +87,7 @@ class GoogleCloudStorage:
                 "total_size": total_size_list
             }
         new_df = pd.DataFrame(formatted)
-        new_df.to_csv("finalised_prefix.csv", index=False)
+        new_df.to_csv("finalised_prefixes.csv", index=False)
 
         if self.is_cached():
             self.clear_cache()
